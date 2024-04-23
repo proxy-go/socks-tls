@@ -35,5 +35,35 @@ Usage of /main:
         specified interface
 ```
 
+# Run socks-tls with docker
 
+## no auth
+```
+docker run  -d --restart=always --net=host \
+-p 1080:1080 -p 1080:1080/udp --name socks-tls proxygo/socks-tls -l :1080
+```
+
+## auth
+```
+docker run  -d --restart=always --net=host \
+-p 1080:1080 -p 1080:1080/udp --name socks-tls proxygo/socks-tls -l :1080 -u root -p 123456
+```
+
+## tls auth
+```
+docker run  -d --restart=always --net=host \
+-p 1080:1080 -p 1080:1080/udp --name socks-tls proxygo/socks-tls -l :1080 -u root -p 123456 -tls -key /app/certs/private.key -cert /app/certs/certificate.crt
+```
+
+## specified interface
+```
+docker run  -d --restart=always --net=host \
+-p 1080:1080 -p 1080:1080/udp --name socks-tls proxygo/socks-tls -l :1080 -iface tun0
+```
+
+## ldap auth
+```
+docker run  -d --restart=always --net=host \
+-p 1080:1080 -p 1080:1080/udp --name socks-tls proxygo/socks-tls -l :1080  -ldap -ldap-addr 127.0.0.1:3890 -ldap-base-dn dc=example,dc=com
+```
 
