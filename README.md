@@ -18,10 +18,10 @@ Usage of /main:
         password
   -u string
         username
-  -sk string
-        server key file path (default "../certs/server.key")
-  -sp string
-        server pem file path (default "../certs/server.pem")
+  -cert string
+        certificate file (default "./certs/certificate.crt")
+  -key string
+        private key file (default "./certs/private.key")
   -tls enable tls
   -iface string
         specified interface
@@ -37,5 +37,3 @@ Usage of /main:
 
 
 
-# License
-[The MIT License (MIT)](https://raw.githubusercontent.com/proxy-go/socks-tls/main/LICENSE)
