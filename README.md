@@ -1,11 +1,10 @@
 # socks-tls
 
-A socks5 proxy over tls
+A simple socks5 proxy over tls
 
 # Features
-* Support connect
-* Support udp associate
-* Support tcp over tls
+* Support socks5(tcp/udp)
+* Support socks5 over tls
 * Support specified interface
 * Support ldap auth
 
