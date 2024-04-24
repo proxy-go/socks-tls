@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/proxy-go/socks-tls/auth"
+	"github.com/proxy-go/socks-tls/certs"
 )
 
 // Tcp server struct
@@ -24,12 +25,18 @@ type TCPServer struct {
 func (t *TCPServer) Start() {
 	var l net.Listener
 	var err error
+	var cert tls.Certificate
 	if t.config.TLS {
-		cer, err := tls.LoadX509KeyPair(t.config.TLSCertFile, t.config.TLSKeyFile)
-		if err != nil {
-			log.Panic(err)
+		if t.config.TLSCertFile != "" && t.config.TLSKeyFile != "" {
+			cert, err = tls.LoadX509KeyPair(t.config.TLSCertFile, t.config.TLSKeyFile)
+			if err != nil {
+				log.Panic(err)
+			}
+		} else {
+			cert = certs.GenerateCert("localhost")
 		}
-		c := &tls.Config{Certificates: []tls.Certificate{cer}}
+
+		c := &tls.Config{Certificates: []tls.Certificate{cert}}
 		l, err = tls.Listen("tcp", t.config.LocalAddr, c)
 		if err != nil {
 			log.Panicf("[tls] failed to listen tcp %v", err)

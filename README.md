@@ -20,9 +20,9 @@ Usage of /main:
         username
   -tls enable tls
   -cert string
-        certificate file (default "./certs/certificate.crt")
+        certificate file (default "")
   -key string
-        private key file (default "./certs/private.key")
+        private key file (default "")
   -t int
         dial timeout in seconds (default 30)
   -ldap
@@ -52,7 +52,7 @@ docker run  -d --restart=always --net=host \
 ## tls auth
 ```
 docker run  -d --restart=always --net=host \
--p 1080:1080 -p 1080:1080/udp --name socks-tls proxygo/socks-tls -l :1080 -u root -p 123456 -tls -key /app/certs/private.key -cert /app/certs/certificate.crt
+-p 1080:1080 -p 1080:1080/udp --name socks-tls proxygo/socks-tls -l :1080 -u root -p 123456 -tls
 ```
 
 ## specified interface
