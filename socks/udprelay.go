@@ -9,8 +9,7 @@ import (
 	"time"
 )
 
-// Udp server struct
-type UDPServer struct {
+type UDPRelay struct {
 	config      Config
 	localConn   *net.UDPConn
 	dstHeader   sync.Map
@@ -19,8 +18,7 @@ type UDPServer struct {
 	outIface    *net.Interface
 }
 
-// Start udp server
-func (u *UDPServer) Start() *net.UDPConn {
+func (u *UDPRelay) Start() *net.UDPConn {
 	udpAddr, _ := net.ResolveUDPAddr("udp", u.config.LocalAddr)
 	udpConn, err := net.ListenUDP("udp", udpAddr)
 	if err != nil {
@@ -29,12 +27,11 @@ func (u *UDPServer) Start() *net.UDPConn {
 	}
 	u.localConn = udpConn
 	go u.toRemote()
-	log.Printf("socks-tls udp proxy started on %v", udpAddr)
+	log.Printf("socks-tls udp relay started on %v", udpAddr)
 	return u.localConn
 }
 
-// To remote
-func (u *UDPServer) toRemote() {
+func (u *UDPRelay) toRemote() {
 	defer u.localConn.Close()
 	buf := make([]byte, BufferSize)
 	for {
@@ -67,8 +64,7 @@ func (u *UDPServer) toRemote() {
 	}
 }
 
-// To local
-func (u *UDPServer) toLocal(remoteConn *net.UDPConn, cliAddr *net.UDPAddr) {
+func (u *UDPRelay) toLocal(remoteConn *net.UDPConn, cliAddr *net.UDPAddr) {
 	defer remoteConn.Close()
 	key := cliAddr.String()
 	buf := make([]byte, BufferSize)
@@ -97,7 +93,7 @@ func (u *UDPServer) toLocal(remoteConn *net.UDPConn, cliAddr *net.UDPAddr) {
     |  2 |   1  |   1  | Variable |     2    | Variable |
     +----+------+------+----------+----------+----------+
 */
-func (u *UDPServer) getAddr(b []byte) (dstAddr *net.UDPAddr, header []byte, data []byte) {
+func (u *UDPRelay) getAddr(b []byte) (dstAddr *net.UDPAddr, header []byte, data []byte) {
 	if len(b) < 4 {
 		return nil, nil, nil
 	}

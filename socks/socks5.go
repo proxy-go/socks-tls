@@ -12,8 +12,7 @@ import (
 	"github.com/proxy-go/socks-tls/certs"
 )
 
-// Tcp server struct
-type TCPServer struct {
+type Socks5Server struct {
 	config   Config
 	udpConn  *net.UDPConn
 	publicIP string
@@ -21,8 +20,7 @@ type TCPServer struct {
 	outIface *net.Interface
 }
 
-// Start tcp server
-func (t *TCPServer) Start() {
+func (t *Socks5Server) Start() {
 	var l net.Listener
 	var err error
 	var cert tls.Certificate
@@ -41,25 +39,24 @@ func (t *TCPServer) Start() {
 		if err != nil {
 			log.Panicf("[tls] failed to listen tcp %v", err)
 		}
-		log.Printf("socks-tls tls proxy started on %s", t.config.LocalAddr)
+		log.Printf("socks-tls server started on %s", t.config.LocalAddr)
 	} else {
 		l, err = net.Listen("tcp", t.config.LocalAddr)
 		if err != nil {
 			log.Panicf("[tcp] failed to listen tcp %v", err)
 		}
-		log.Printf("socks-tls tcp proxy started on %s", t.config.LocalAddr)
+		log.Printf("socks-tls server started on %s", t.config.LocalAddr)
 	}
 	for {
 		conn, err := l.Accept()
 		if err != nil {
 			continue
 		}
-		go t.handler(conn)
+		go t.handleConn(conn)
 	}
 }
 
-// Tcp handler
-func (t *TCPServer) handler(conn net.Conn) {
+func (t *Socks5Server) handleConn(conn net.Conn) {
 	buf := make([]byte, BufferSize)
 	// read version
 	n, err := conn.Read(buf[0:])
@@ -103,9 +100,9 @@ func (t *TCPServer) handler(conn net.Conn) {
 	b = buf[0:n]
 	switch b[1] {
 	case ConnectCommand:
-		t.TCPProxy(conn, b)
+		t.connectCmd(conn, b)
 	case AssociateCommand:
-		t.UDPProxy(conn, t.udpConn, t.config)
+		t.associateCmd(conn, t.udpConn, t.config)
 	case BindCommand:
 		resp(conn, CommandNotSupported)
 	default:
@@ -122,7 +119,7 @@ func (t *TCPServer) handler(conn net.Conn) {
     | 1 | 1 | 1 to 255 | 1 | 1 to 255 |
     +----+------+----------+------+----------+
 */
-func (t *TCPServer) getUserPwd(conn net.Conn) (user, pwd string) {
+func (t *Socks5Server) getUserPwd(conn net.Conn) (user, pwd string) {
 	ver := make([]byte, 1)
 	n, err := conn.Read(ver)
 	if err != nil || n == 0 {
@@ -172,7 +169,7 @@ func (t *TCPServer) getUserPwd(conn net.Conn) (user, pwd string) {
     | 1  |  1  | X'00' |  1   | Variable |    2     |
     +----+-----+-------+------+----------+----------+
 */
-func (t *TCPServer) getAddr(b []byte) (host string, port string) {
+func (t *Socks5Server) getAddr(b []byte) (host string, port string) {
 	len := len(b)
 	if len < 4 {
 		return "", ""
@@ -191,8 +188,7 @@ func (t *TCPServer) getAddr(b []byte) (host string, port string) {
 	return host, port
 }
 
-// Tcp proxy
-func (t *TCPServer) TCPProxy(conn net.Conn, data []byte) {
+func (t *Socks5Server) connectCmd(conn net.Conn, data []byte) {
 	host, port := t.getAddr(data)
 	if host == "" || port == "" {
 		conn.Close()
@@ -210,8 +206,7 @@ func (t *TCPServer) TCPProxy(conn net.Conn, data []byte) {
 	copy(conn, remoteConn)
 }
 
-// Udp proxy
-func (t *TCPServer) UDPProxy(tcpConn net.Conn, udpConn *net.UDPConn, config Config) {
+func (t *Socks5Server) associateCmd(tcpConn net.Conn, udpConn *net.UDPConn, config Config) {
 	defer tcpConn.Close()
 	if udpConn == nil {
 		log.Printf("[udp] failed to start udp server on %v", config.LocalAddr)
@@ -225,18 +220,17 @@ func (t *TCPServer) UDPProxy(tcpConn net.Conn, udpConn *net.UDPConn, config Conf
 		bindAddr.IP = net.ParseIP(t.publicIP)
 	}
 	// resp udp associate
-	respUDP(tcpConn, bindAddr)
+	respAddr(tcpConn, bindAddr)
 	// keep tcp conn alive
 	done := make(chan bool)
 	if config.TLS {
-		go keepTLSAlive(tcpConn.(*tls.Conn), done)
+		go TLSAKeeplive(tcpConn.(*tls.Conn), done)
 	} else {
-		go keepTCPAlive(tcpConn.(*net.TCPConn), done)
+		go TCPConnKeepalive(tcpConn.(*net.TCPConn), done)
 	}
 	<-done
 }
 
-// Get public ip
 func getPublicIP() string {
 	conn, err := net.Dial("udp", "8.8.8.8:80")
 	if err != nil {
@@ -248,8 +242,7 @@ func getPublicIP() string {
 	return localAddr[0:idx]
 }
 
-// Keep tcp connection alive
-func keepTCPAlive(tcpConn *net.TCPConn, done chan<- bool) {
+func TCPConnKeepalive(tcpConn *net.TCPConn, done chan<- bool) {
 	tcpConn.SetKeepAlive(true)
 	buf := make([]byte, BufferSize)
 	for {
@@ -261,8 +254,7 @@ func keepTCPAlive(tcpConn *net.TCPConn, done chan<- bool) {
 	done <- true
 }
 
-// Keep tls connection alive
-func keepTLSAlive(conn *tls.Conn, done chan<- bool) {
+func TLSAKeeplive(conn *tls.Conn, done chan<- bool) {
 	buf := make([]byte, BufferSize)
 	for {
 		_, err := conn.Read(buf[0:])
@@ -273,7 +265,6 @@ func keepTLSAlive(conn *tls.Conn, done chan<- bool) {
 	done <- true
 }
 
-// Copy data from src to dst
 func copy(to io.WriteCloser, from io.ReadCloser) {
 	defer to.Close()
 	defer from.Close()

@@ -5,17 +5,7 @@ import (
 	"net"
 )
 
-func Start(config Config) {
-	outIP, outIface := getIface(config)
-	// start udp server
-	u := &UDPServer{config: config, outIP: outIP, outIface: outIface}
-	udpConn := u.Start()
-	// start tcp server
-	t := &TCPServer{config: config, udpConn: udpConn, outIP: outIP, outIface: outIface}
-	t.Start()
-}
-
-func getIface(config Config) (net.IP, *net.Interface) {
+func GetIface(config Config) (net.IP, *net.Interface) {
 	if config.Iface == "" {
 		return nil, nil
 	}
