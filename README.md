@@ -7,6 +7,7 @@ A simple socks5 proxy over tls
 * Support socks5 over tls
 * Support specified interface
 * Support ldap auth
+* Support automatic tls using Let's Encrypt
 
 # Usage
 ```
