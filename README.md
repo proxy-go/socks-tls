@@ -63,8 +63,9 @@ docker run  -d --restart=always --net=host \
 ```
 
 ## automatic tls using Let's Encrypt
+```
 docker run  -d --restart=always --net=host \
--p 1080:1080 -p 1080:1080/udp --name socks-tls proxygo/socks-tls -l :1080 -u root -p 123456 -tls -auto
+-p 1080:1080 -p 1080:1080/udp --name socks-tls proxygo/socks-tls -l :1080 -u root -p 123456 -tls -auto -d your.domain.com
 ```
 
 ## specified interface
