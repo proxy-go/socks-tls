@@ -17,13 +17,20 @@ Usage of /main:
         password
   -u string
         username
-  -tls enable tls
+  -tls 
+        enable tls
+  -auto
+        tls cert auto mode
   -cert string
         certificate file (default "")
   -key string
         private key file (default "")
+  -d string
+        tls domain (default "localhost")
   -t int
         dial timeout in seconds (default 30)
+  -http string
+        http server address (default ":80")
   -ldap
         enable ldap auth
   -ldap-addr string
@@ -52,6 +59,11 @@ docker run  -d --restart=always --net=host \
 ```
 docker run  -d --restart=always --net=host \
 -p 1080:1080 -p 1080:1080/udp --name socks-tls proxygo/socks-tls -l :1080 -u root -p 123456 -tls
+```
+
+## automatic tls using Let's Encrypt
+docker run  -d --restart=always --net=host \
+-p 1080:1080 -p 1080:1080/udp --name socks-tls proxygo/socks-tls -l :1080 -u root -p 123456 -tls -auto
 ```
 
 ## specified interface

@@ -10,6 +10,7 @@ import (
 
 	"github.com/proxy-go/socks-tls/auth"
 	"github.com/proxy-go/socks-tls/certs"
+	"github.com/caddyserver/certmagic"
 )
 
 type Socks5Server struct {
@@ -31,11 +32,19 @@ func (t *Socks5Server) Start() {
 				log.Panic(err)
 			}
 		} else {
-			cert = certs.GenerateCert("localhost")
+			cert = certs.GenerateCert(t.config.TLSDomain)
 		}
-
-		c := &tls.Config{Certificates: []tls.Certificate{cert}}
-		l, err = tls.Listen("tcp", t.config.LocalAddr, c)
+		var tlsConf *tls.Config
+		if t.config.TLSAuto {
+			go RunHTTPChallengeServer(t.config.HttpAddr)
+			tlsConf, err = certmagic.TLS([]string{t.config.TLSDomain})
+			if err != nil {
+				log.Panic(err)
+			}
+		} else {
+			tlsConf = &tls.Config{Certificates: []tls.Certificate{cert}}
+		}
+		l, err = tls.Listen("tcp", t.config.LocalAddr, tlsConf)
 		if err != nil {
 			log.Panicf("[tls] failed to listen tcp %v", err)
 		}
