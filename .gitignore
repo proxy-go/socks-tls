@@ -15,4 +15,8 @@
 
 logs/
 bin/
+fly.toml
 
+# build
+build/
+vendor/

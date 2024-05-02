@@ -23,6 +23,6 @@ func main() {
 	flag.StringVar(&config.LdapAddr, "ldap-addr", "127.0.0.1:3890", "ldap address")
 	flag.StringVar(&config.LdapBaseDN, "ldap-base-dn", "dc=example,dc=com", "ldap base dn")
 	flag.Parse()
-
+	config.SetEnv()
 	socks.Start(config)
 }
