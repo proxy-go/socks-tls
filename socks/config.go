@@ -39,8 +39,12 @@ func(config *Config) SetEnv(){
 	if password != "" {
 		config.Password = password
 	}
-	auto := os.Getenv("AUTO")
-	if auto == "true" {
+	tls := os.Getenv("TLS")
+	if tls == "true" {
+		config.TLS = true
+	}
+	tlsAuto := os.Getenv("TLS_AUTO")
+	if tlsAuto == "true" {
 		config.TLSAuto = true
 	}
 	domain := os.Getenv("DOMAIN")
