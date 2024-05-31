@@ -22,3 +22,9 @@ func GetIface(config Config) (net.IP, *net.Interface) {
 	log.Printf("iface name: %v, out ip: %v", config.Iface, outIP.String())
 	return outIP, outIface
 }
+
+func RecoverFromPanic() {
+	if r := recover(); r != nil {
+		log.Printf("Recovered from panic:%v", r)
+	}
+}

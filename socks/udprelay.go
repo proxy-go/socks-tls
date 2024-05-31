@@ -32,6 +32,7 @@ func (u *UDPRelay) Start() *net.UDPConn {
 }
 
 func (u *UDPRelay) toRemote() {
+	defer RecoverFromPanic()
 	defer u.localConn.Close()
 	buf := make([]byte, BufferSize)
 	for {

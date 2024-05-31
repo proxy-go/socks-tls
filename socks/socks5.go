@@ -8,9 +8,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/caddyserver/certmagic"
 	"github.com/proxy-go/socks-tls/auth"
 	"github.com/proxy-go/socks-tls/certs"
-	"github.com/caddyserver/certmagic"
 )
 
 type Socks5Server struct {
@@ -66,6 +66,7 @@ func (t *Socks5Server) Start() {
 }
 
 func (t *Socks5Server) handleConn(conn net.Conn) {
+	defer RecoverFromPanic()
 	buf := make([]byte, BufferSize)
 	// read version
 	n, err := conn.Read(buf[0:])
